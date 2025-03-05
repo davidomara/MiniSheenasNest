@@ -1,0 +1,223 @@
+﻿@model IEnumerable<MiniSheenasNest.Models.Messages>
+
+@{
+    ViewData["Title"] = "Conversation";
+
+    // Get the user names from the ViewBag (e.g. "Sheena" or "Nord")
+    var currentUser = (string)ViewBag.CurrentUser;
+    var otherUser = (string)ViewBag.OtherUser;
+
+    // Ternary logic to determine which image to display
+    // Adjust filenames/paths as needed:
+    string currentUserImgPath = (currentUser == "Sheena")
+        ? "~/images/sheena.jpg"
+        : "~/images/nord.jpg";
+
+    string otherUserImgPath = (otherUser == "Sheena")
+        ? "~/images/sheena.jpg"
+        : "~/images/nord.jpg";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <style>
+        .chat-container {
+            width: 60%;
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            background: #e5ddd5;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+            height: 80vh;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: #075E54;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .user-info img {
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                object-fit: cover;
+                border: 2px solid #09d261;
+            }
+
+            .user-info h2 {
+                margin: 0;
+                font-size: 1.2rem;
+            }
+
+        .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .chat-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .chat-bubble {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin: 6px 0;
+            clear: both;
+            max-width: 70%;
+            position: relative;
+            font-size: 0.95rem;
+            line-height: 1.3;
+        }
+
+        .outgoing {
+            background-color: #dcf8c6;
+            float: right;
+            text-align: left;
+        }
+
+        .incoming {
+            background-color: #fff;
+            float: left;
+        }
+
+        .bubble-footer {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .chat-input-area {
+            background: #f0f0f0;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+        }
+
+        .chat-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+            .chat-form textarea {
+                flex: 1;
+                min-height: 40px;
+                resize: none;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 8px;
+                font-size: 0.95rem;
+            }
+
+            .chat-form button {
+                width: 80px;
+                height: 40px;
+                background-color: #09d261;
+                color: #fff;
+                border: none;
+                border-radius: 4px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+                .chat-form button:hover {
+                    background-color: #07b457;
+                }
+
+        .chat-list::after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+
+        <!-- HEADER: Display both the current user & the other user -->
+        <div class="chat-header">
+            <!-- Left side: current user info -->
+            <div class="user-info">
+                <img src="@Url.Content(currentUserImgPath)" alt="@currentUser" />
+                <h2>@currentUser</h2>
+            </div>
+
+            <!-- Right side: other user info -->
+            <div class="user-info">
+                <img src="@Url.Content(otherUserImgPath)" alt="@otherUser" />
+                <h2>@otherUser</h2>
+            </div>
+        </div>
+
+        <!-- Main messages area -->
+        <div class="chat-messages" style="background-image:src(../../wwwroot/twonords.jpg)">
+            @if (Model != null && Model.Any())
+            {
+                <ul class="chat-list">
+                    @foreach (var msg in Model)
+                    {
+                        var bubbleClass = (msg.SenderName == currentUser) ? "outgoing" : "incoming";
+                        <li class="chat-bubble @bubbleClass">
+                            @msg.Content
+
+                            <div class="bubble-footer">
+                                @msg.SentAt.ToString("HH:mm")
+                                @{
+                                    var checks = msg.IsRead ? "✔✔" : "✔";
+                                }
+                                @checks
+
+                                @if (!msg.IsRead && msg.SenderName == currentUser)
+                                {
+                                    <!-- Only show Edit link if I sent it & it’s not read -->
+                                    <a asp-action="EditMessage" asp-route-messageId="@msg.MessageId">Edit</a>
+                                }
+                            </div>
+                        </li>
+                    }
+
+                </ul>
+            }
+            else
+            {
+                <p>No messages yet.</p>
+            }
+        </div>
+
+        <!-- Bottom input area -->
+        <div class="chat-input-area">
+            <form method="post" action="/Chat/PostMessage" class="chat-form">
+                <textarea id="content" name="content" placeholder="Type your message..."></textarea>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+
+    </div>
+
+</body>
+</html>

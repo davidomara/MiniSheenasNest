@@ -1,0 +1,17 @@
+﻿@model MiniSheenasNest.Models.Messages
+
+@{
+    ViewData["Title"] = "Edit Message";
+}
+
+<h2>Edit Message</h2>
+
+<form asp-action="EditMessage" method="post">
+    <input type="hidden" name="messageId" value="@Model.MessageId" />
+
+    <label for="updatedContent">New Content:</label><br />
+    <textarea id="updatedContent" name="updatedContent" rows="4" cols="60">@Model.Content</textarea><br /><br />
+
+    <button type="submit">Save</button>
+    <a asp-action="Index">Cancel</a>
+</form>
