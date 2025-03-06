@@ -25,6 +25,13 @@ builder.Services.AddScoped<IChatService, ChatService>();
 // 3) Add SignalR
 builder.Services.AddSignalR();
 
+// Configure cookie settings for login, logout, and access denied paths
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.LogoutPath = "/Identity/Account/Logout";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
