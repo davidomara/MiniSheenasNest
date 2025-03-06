@@ -154,6 +154,77 @@
             clear: both;
         }
     </style>
+    <style>
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            top: 50%;
+            width: 40%;
+            height: 20%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Modal Content */
+        .modal-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Close Button */
+        .close {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Form Styling */
+        #editMessageForm {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        #updatedContent {
+            width: 100%;
+            height: 50px; /* Adjusted for readability */
+            resize: none;
+            padding: 5px;
+            font-size: 0.9rem;
+        }
+
+        button {
+            width: auto;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+            button[type="submit"] {
+                background-color: #09d261;
+                color: white;
+            }
+
+            button#cancelEdit {
+                background-color: #d9534f;
+                color: white;
+            }
+    </style>
 </head>
 <body>
 
@@ -161,23 +232,25 @@
 
         <!-- HEADER: Display both the current user & the other user -->
         <div class="chat-header">
-            <!-- Left side: current user info -->
+            <!-- Left side: other user info -->
+            <div class="user-info">
+                <img src="@Url.Content(otherUserImgPath)" alt="@otherUser" />
+                <h2>@otherUser</h2>
+            </div>
+
+            <!--  Right side: current user info -->
             <div class="user-info">
                 <img src="@Url.Content(currentUserImgPath)" alt="@currentUser" />
                 <h2>@currentUser</h2>
             </div>
 
-            <!-- Right side: other user info -->
-            <div class="user-info">
-                <img src="@Url.Content(otherUserImgPath)" alt="@otherUser" />
-                <h2>@otherUser</h2>
-            </div>
         </div>
 
         <!-- Main messages area -->
         <div class="chat-messages" style="background-image:src(../../wwwroot/twonords.jpg)">
             @if (Model != null && Model.Any())
             {
+                <!-- Adjust the Edit link in the messages list -->
                 <ul class="chat-list">
                     @foreach (var msg in Model)
                     {
@@ -194,13 +267,12 @@
 
                                 @if (!msg.IsRead && msg.SenderName == currentUser)
                                 {
-                                    <!-- Only show Edit link if I sent it & it’s not read -->
-                                    <a asp-action="EditMessage" asp-route-messageId="@msg.MessageId">Edit</a>
+                                    <!-- Open Edit Modal -->
+                                    <a href="#" class="edit-link" data-message-id="@msg.MessageId" data-message-content="@msg.Content">Edit</a>
                                 }
                             </div>
                         </li>
                     }
-
                 </ul>
             }
             else
@@ -211,13 +283,76 @@
 
         <!-- Bottom input area -->
         <div class="chat-input-area">
-            <form method="post" action="/Chat/PostMessage" class="chat-form">
+            <form method="post" action="/Chat/PostMessage" class="chat-form" id="chatForm">
+                <input type="hidden" id="messageId" name="messageId" />
                 <textarea id="content" name="content" placeholder="Type your message..."></textarea>
-                <button type="submit">Send</button>
+                <button type="submit" id="sendButton">Send</button>
             </form>
         </div>
 
     </div>
 
+    <!-- JavaScript to Handle Modal -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const textarea = document.getElementById("content");
+            const messageIdInput = document.getElementById("messageId");
+            const sendButton = document.getElementById("sendButton");
+            const chatForm = document.getElementById("chatForm");
+
+            // Handle clicking "Edit"
+            document.querySelectorAll(".edit-link").forEach(link => {
+                link.addEventListener("click", function (event) {
+                    event.preventDefault();
+
+                    // Get message data
+                    const messageId = this.getAttribute("data-message-id");
+                    const messageContent = this.getAttribute("data-message-content");
+
+                    // Populate the input field
+                    textarea.value = messageContent;
+                    messageIdInput.value = messageId;
+
+                    // Change button text
+                    sendButton.textContent = "Update";
+                });
+            });
+
+            // Handle form submission (detect if updating or sending new message)
+            chatForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+
+                const messageId = messageIdInput.value;
+                const messageContent = textarea.value.trim();
+
+                if (!messageContent) {
+                    alert("Message cannot be empty.");
+                    return;
+                }
+
+                if (messageId) {
+                    // Update existing message
+                    fetch("/Chat/EditMessage", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: `messageId=${messageId}&updatedContent=${encodeURIComponent(messageContent)}`
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                location.reload(); // Refresh messages
+                            } else {
+                                alert("Error updating message.");
+                            }
+                        });
+
+                } else {
+                    // Send new message
+                    chatForm.submit();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
+
+
