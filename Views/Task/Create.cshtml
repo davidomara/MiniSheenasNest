@@ -1,0 +1,59 @@
+﻿@model MiniSheenasNest.Models.TaskItem
+
+@{
+    ViewData["Title"] = "Create Task";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color:#0e888b">
+                    <h2 class="mb-0">Task Management Board</h2>
+                    <a asp-action="Index" class="btn btn-light btn-lg">View Tasks</a>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div class="form-group mb-3">
+                            <label asp-for="Title" class="form-label"></label>
+                            <input asp-for="Title" class="form-control" placeholder="Enter task title" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" placeholder="Enter task description" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="Status" class="form-label"></label>
+                                <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<MiniSheenasNest.Models.TaskStatus>()"></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Priority" class="form-label"></label>
+                                <select asp-for="Priority" class="form-select" asp-items="Html.GetEnumSelectList<MiniSheenasNest.Models.TaskPriority>()"></select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label asp-for="DueDate" class="form-label"></label>
+                                <input asp-for="DueDate" type="date" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="AssignedUserId" class="form-label"></label>
+                                <select asp-for="AssignedUserId" class="form-select" asp-items="ViewBag.UsersList"></select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-10">
+                            </div>
+                            <div class="col-md-2">
+                                    <button type="submit" class="btn text-white" style="background-color:#0e888b">Create Task</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

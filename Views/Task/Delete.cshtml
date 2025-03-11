@@ -1,0 +1,36 @@
+﻿@model MiniSheenasNest.Models.TaskItem
+
+@{
+    ViewData["Title"] = "Delete Task";
+}
+
+<h2>Delete Task</h2>
+
+<div>
+    <h4>Task Details</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">Title</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Title)</dd>
+
+        <dt class="col-sm-2">Description</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Description)</dd>
+
+        <dt class="col-sm-2">Status</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Status)</dd>
+
+        <dt class="col-sm-2">Priority</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.Priority)</dd>
+
+        <dt class="col-sm-2">Due Date</dt>
+        <dd class="col-sm-10">@Html.DisplayFor(model => model.DueDate)</dd>
+    </dl>
+</div>
+
+<form asp-action="Delete" method="post">
+    @Html.AntiForgeryToken()
+    <!-- Hidden input to send the TaskItemId -->
+    <input type="hidden" asp-for="TaskItemId" />
+    <input type="submit" value="Delete" class="btn btn-danger" />
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

@@ -12,5 +12,6 @@ namespace MiniSheenasNest.Data
         }
 
         public DbSet<Messages> Messages { get; set; }
+        public DbSet<TaskItem> TaskItems { get; set; }
     }
 }

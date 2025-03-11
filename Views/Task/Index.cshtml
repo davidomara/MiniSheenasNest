@@ -1,0 +1,225 @@
+﻿@model IEnumerable<MiniSheenasNest.Models.TaskItem>
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@{
+    ViewData["Title"] = "Task Board";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+    <!-- Output the antiforgery token in a meta tag -->
+    <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
+    <style>
+        /* Global styles */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+        }
+        /* Header container with centered title and button on the right */
+        .header-container {
+            position: relative;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+            .header-container h2 {
+                margin: 0;
+            }
+
+            .header-container a.btn {
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                padding: 8px 15px;
+                background-color: #09d261;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+            }
+
+                .header-container a.btn:hover {
+                    background-color: #07b457;
+                }
+        /* Container for the Kanban board */
+        .kanban-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        /* Each column */
+        .kanban-column {
+            background-color:burlywood;
+            border-radius: 5px;
+            width: 30%;
+            min-height: 400px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+            .kanban-column h3 {
+                text-align: center;
+                margin-top: 0;
+            }
+            /* Color-code tasks based on column status */
+            .kanban-column[data-status="ToDo"] .task-card {
+                background-color: #f8f9fa; /* Light neutral (white smoke) */
+            }
+
+            .kanban-column[data-status="InProgress"] .task-card {
+                background-color: #fffacd; /* Light yellow */
+            }
+
+            .kanban-column[data-status="Done"] .task-card {
+                background-color: #d4edda; /* Light green */
+            }
+        /* Task card styles */
+        .task-card {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            cursor: move;
+        }
+
+            .task-card.dragging {
+                opacity: 0.5;
+            }
+        /* Edit link styling */
+        .edit-link {
+            display: inline-block;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+            .edit-link:hover {
+                text-decoration: underline;
+            }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header text-white d-flex justify-content-between align-items-center" style="background-color:#0e888b">
+                    <h2 class="mb-0">Task Management Board</h2>
+                    <a asp-action="Create" class="btn btn-light btn-lg">Add New Tasks</a>
+                </div>
+                <div class="kanban-container">
+                <!-- To Do Column -->
+                <div class="kanban-column" data-status="ToDo" ondragover="allowDrop(event)" ondrop="dropTask(event)">
+                    <h3>To Do</h3>
+                    <div id="todoColumn">
+                        @foreach (var task in Model.Where(t => t.Status.ToString() == "ToDo"))
+                        {
+                            <div class="task-card" draggable="true" data-task-id="@task.TaskItemId" ondragstart="dragTask(event)" ondragend="dragEnd(event)">
+                                <strong>@task.Title</strong>
+                                <p>@task.Description</p>
+                                <p>Due: @task.DueDate.ToShortDateString()</p>
+                                <a asp-action="Edit" asp-route-id="@task.TaskItemId" class="edit-link">Edit</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <!-- In Progress Column -->
+                <div class="kanban-column" data-status="InProgress" ondragover="allowDrop(event)" ondrop="dropTask(event)">
+                    <h3>In Progress</h3>
+                    <div id="inprogressColumn">
+                        @foreach (var task in Model.Where(t => t.Status.ToString() == "InProgress"))
+                        {
+                            <div class="task-card" draggable="true" data-task-id="@task.TaskItemId" ondragstart="dragTask(event)" ondragend="dragEnd(event)">
+                                <strong>@task.Title</strong>
+                                <p>@task.Description</p>
+                                <p>Due: @task.DueDate.ToShortDateString()</p>
+                                <a asp-action="Edit" asp-route-id="@task.TaskItemId" class="edit-link">Edit</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <!-- Done Column -->
+                <div class="kanban-column" data-status="Done" ondragover="allowDrop(event)" ondrop="dropTask(event)">
+                    <h3>Done</h3>
+                    <div id="doneColumn">
+                        @foreach (var task in Model.Where(t => t.Status.ToString() == "Done"))
+                        {
+                            <div class="task-card" draggable="true" data-task-id="@task.TaskItemId" ondragstart="dragTask(event)" ondragend="dragEnd(event)">
+                                <strong>@task.Title</strong>
+                                <p>@task.Description</p>
+                                <p>Due: @task.DueDate.ToShortDateString()</p>
+                                <a asp-action="Edit" asp-route-id="@task.TaskItemId" class="edit-link">Edit</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variable to store dragged task's ID
+        let draggedTaskId = null;
+
+        function dragTask(e) {
+            e.currentTarget.classList.add("dragging");
+            draggedTaskId = e.currentTarget.dataset.taskId;
+        }
+
+        function dragEnd(e) {
+            e.currentTarget.classList.remove("dragging");
+            draggedTaskId = null;
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+        }
+
+        function dropTask(e) {
+            e.preventDefault();
+            const newStatus = e.currentTarget.dataset.status;
+            console.log("Task " + draggedTaskId + " dropped into " + newStatus);
+            // Retrieve the CSRF token from the meta tag
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            // Send an AJAX request to update the task status on the server
+            fetch('/Task/UpdateStatus', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': csrfToken
+                },
+                body: JSON.stringify({
+                    taskId: draggedTaskId,
+                    newStatus: newStatus
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error updating task on server');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Update successful', data);
+                    // Refresh the page to reload updated tasks
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error updating task:', error);
+                });
+        }
+    </script>
+
+</body>
+</html>
